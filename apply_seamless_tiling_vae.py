@@ -3,7 +3,7 @@ import torch
 
 class ApplySeamlessTilingVAE:
     def __init__(self):
-        pass
+        self.original_decode = None
 
     @classmethod
     def INPUT_TYPES(cls):
@@ -19,16 +19,18 @@ class ApplySeamlessTilingVAE:
     CATEGORY = "latent"
 
     def apply(self, vae, bypass):
-        if bypass:
-            return (vae,)
+        if self.original_decode is None:
+            self.original_decode = vae.decode
 
-        original_decode = vae.decode
+        if bypass:
+            vae.decode = self.original_decode
+            return (vae,)
 
         def seamless_decode(samples_in):
             bs, c, h, w = samples_in.shape
 
-            d0 = original_decode(samples_in)
-            d1 = original_decode(
+            d0 = self.original_decode(samples_in)
+            d1 = self.original_decode(
                 torch.roll(samples_in, shifts=(h // 2, w // 2), dims=(2, 3))
             )
 

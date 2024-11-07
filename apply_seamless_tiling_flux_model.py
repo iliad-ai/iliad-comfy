@@ -72,14 +72,13 @@ class ApplySeamlessTilingFluxModel:
                 r1 = self.original_forward(
                     half_shifted_x, timestep, context, y, guidance, control, **kwargs
                 )
-                r1 = torch.roll(
-                    r1, shifts=(-h // 2, -w // 2), dims=(2, 3)
-                )  # Unshift r1 back
+                # Unshift r1
+                r1 = torch.roll(r1, shifts=(-h // 2, -w // 2), dims=(2, 3))
 
                 # Initialize a mask that matches the shape of the latents
                 mask = torch.ones(bs, c, h, w, device=x.device)
                 # Make the mask 0 in the seam areas
-                # (16 pixels deep on each side due to 8x compression image->latent)
+                # (16 pixels deep on each side due to 8x compression image -> latent)
                 mask[:, :, :2, :] = 0  # Top edge
                 mask[:, :, -2:, :] = 0  # Bottom edge
                 mask[:, :, :, :2] = 0  # Left edge
