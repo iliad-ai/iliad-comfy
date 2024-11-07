@@ -1,9 +1,10 @@
 import torch
 
 
-class SetPatternFluxModel:
+class ApplySeamlessTilingFluxModel:
     def __init__(self):
         self.i = 0
+        self.original_forward = None
 
     @classmethod
     def INPUT_TYPES(cls):
@@ -19,16 +20,23 @@ class SetPatternFluxModel:
     CATEGORY = "latent"
 
     def apply(self, model, bypass):
+        if self.original_forward is None:
+            self.original_forward = model.model.diffusion_model.forward
+
         if bypass:
+            model.model.diffusion_model.forward = self.original_forward
             return (model,)
 
-        original_forward = model.model.diffusion_model.forward
-
-        def pattern_forward(x, timestep, context, y, guidance, control=None, **kwargs):
+        def seamless_forward(x, timestep, context, y, guidance, control=None, **kwargs):
             shift_h = 0
             shift_w = 0
             bs, c, h, w = x.shape
-            if timestep[0] > 0.50:  # 0.25
+
+            # 0.5 because, beyond this (0.5 -> 0.0), there are visible seams
+            # around where the shifts occurred.
+            # So, to get around it, we do two passes past 0.5
+            # and merge them (see else clause).
+            if timestep[0] > 0.50:
                 shift_schedule = [
                     (h // 16, w // 16),
                     (-h // 16, -w // 16),
@@ -47,21 +55,21 @@ class SetPatternFluxModel:
                 rolled_x = torch.roll(x, shifts=(shift_h, shift_w), dims=(2, 3))
 
                 # Call the original forward method
-                result = original_forward(
+                result = self.original_forward(
                     rolled_x, timestep, context, y, guidance, control, **kwargs
                 )
 
                 # Unshift and return
-                return torch.roll(result, shifts=(-shift_h, -shift_w), dims=(2, 3))
+                x = torch.roll(result, shifts=(-shift_h, -shift_w), dims=(2, 3))
             else:
                 # First forward pass result, without any shift
-                r0 = original_forward(
+                r0 = self.original_forward(
                     x, timestep, context, y, guidance, control, **kwargs
                 )
 
                 # Second forward pass result, with half-shift in both dimensions
                 half_shifted_x = torch.roll(x, shifts=(h // 2, w // 2), dims=(2, 3))
-                r1 = original_forward(
+                r1 = self.original_forward(
                     half_shifted_x, timestep, context, y, guidance, control, **kwargs
                 )
                 r1 = torch.roll(
@@ -80,16 +88,20 @@ class SetPatternFluxModel:
                 # Blend r0 and r1 using the mask
                 result = mask * r0 + (1 - mask) * r1
 
-                return result
+                x = result
+
+            return x
 
         # Monkey-patch the forward method
-        model.model.diffusion_model.forward = lambda *args, **kwargs: pattern_forward(
+        model.model.diffusion_model.forward = lambda *args, **kwargs: seamless_forward(
             *args, **kwargs
         )
 
         return (model,)
 
 
-NODE_CLASS_MAPPINGS = {"SetPatternFluxModel": SetPatternFluxModel}
+NODE_CLASS_MAPPINGS = {"ApplySeamlessTilingFluxModel": ApplySeamlessTilingFluxModel}
 
-NODE_DISPLAY_NAME_MAPPINGS = {"SetPatternFluxModel": "Set Pattern Flux Model (Iliad)"}
+NODE_DISPLAY_NAME_MAPPINGS = {
+    "ApplySeamlessTilingFluxModel": "Apply Seamless Tiling Flux Model (Iliad)"
+}

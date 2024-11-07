@@ -1,7 +1,7 @@
 import torch
 
 
-class SetPatternVAE:
+class ApplySeamlessTilingVAE:
     def __init__(self):
         pass
 
@@ -24,7 +24,7 @@ class SetPatternVAE:
 
         original_decode = vae.decode
 
-        def new_decode(samples_in):
+        def seamless_decode(samples_in):
             bs, c, h, w = samples_in.shape
 
             d0 = original_decode(samples_in)
@@ -51,11 +51,13 @@ class SetPatternVAE:
             return result
 
         # Monkey-patch the decode method
-        vae.decode = lambda *args, **kwargs: new_decode(*args, **kwargs)
+        vae.decode = lambda *args, **kwargs: seamless_decode(*args, **kwargs)
 
         return (vae,)
 
 
-NODE_CLASS_MAPPINGS = {"SetPatternVAE": SetPatternVAE}
+NODE_CLASS_MAPPINGS = {"ApplySeamlessTilingVAE": ApplySeamlessTilingVAE}
 
-NODE_DISPLAY_NAME_MAPPINGS = {"SetPatternVAE": "Set Pattern VAE (Iliad)"}
+NODE_DISPLAY_NAME_MAPPINGS = {
+    "ApplySeamlessTilingVAE": "Apply Seamless Tiling VAE (Iliad)"
+}

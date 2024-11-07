@@ -1,9 +1,9 @@
-from .set_pattern_flux_model import SetPatternFluxModel
-from .set_pattern_vae import SetPatternVAE
+from .apply_seamless_tiling_flux_model import ApplySeamlessTilingFluxModel
+from .apply_seamless_tiling_vae import ApplySeamlessTilingVAE
 
 NODE_CLASS_MAPPINGS = {
-    "Set Pattern Flux Model (Iliad)": SetPatternFluxModel,
-    "Set Pattern VAE (Iliad)": SetPatternVAE,
+    "Apply Seamless Tiling Flux Model (Iliad)": ApplySeamlessTilingFluxModel,
+    "Apply Seamless Tiling VAE (Iliad)": ApplySeamlessTilingVAE,
 }
 
 __all__ = ["NODE_CLASS_MAPPINGS"]
