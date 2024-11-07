@@ -9,8 +9,8 @@ ComfyUI nodes created by [Iliad](https://iliad.ai).
 Iliad is an expressive tool for generating and editing visual art, made for artists and designers.
 
 
-## Pattern nodes
+## Nodes
 
-### Set Pattern Flux Model (Iliad)
+### Apply Seamless Tiling Flux Model (Iliad)
 
-### Set Pattern VAE (Iliad)
+### Apply Seamless Tiling VAE (Iliad)
