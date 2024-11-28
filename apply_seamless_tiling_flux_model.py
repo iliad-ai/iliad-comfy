@@ -18,6 +18,7 @@ class ApplySeamlessTilingFluxModel:
     RETURN_TYPES = ("MODEL",)
     FUNCTION = "apply"
     CATEGORY = "latent"
+    OUTPUT_NODE = True
 
     def apply(self, model, bypass):
         if self.original_forward is None:
@@ -97,6 +98,10 @@ class ApplySeamlessTilingFluxModel:
         )
 
         return (model,)
+
+    @classmethod
+    def IS_CHANGED(*args, **kwargs):
+        return float("NaN")
 
 
 NODE_CLASS_MAPPINGS = {"ApplySeamlessTilingFluxModel": ApplySeamlessTilingFluxModel}

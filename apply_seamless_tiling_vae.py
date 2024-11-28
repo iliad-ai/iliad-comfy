@@ -17,8 +17,11 @@ class ApplySeamlessTilingVAE:
     RETURN_TYPES = ("VAE",)
     FUNCTION = "apply"
     CATEGORY = "latent"
+    OUTPUT_NODE = True
 
     def apply(self, vae, bypass):
+        self.last_bypass_value = bypass
+
         if self.original_decode is None:
             self.original_decode = vae.decode
 
@@ -57,6 +60,9 @@ class ApplySeamlessTilingVAE:
 
         return (vae,)
 
+    @classmethod
+    def IS_CHANGED(*args, **kwargs):
+        return float("NaN")
 
 NODE_CLASS_MAPPINGS = {"ApplySeamlessTilingVAE": ApplySeamlessTilingVAE}
 
